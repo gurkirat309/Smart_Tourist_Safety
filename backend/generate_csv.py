@@ -44,16 +44,16 @@ def main():
     df_route = data_generator.generate_route_deviation_dataset(n_normal=1500, n_anomaly=300)
     path_route = os.path.join(DATA_DIR, "route_deviation_data.csv")
     df_route.to_csv(path_route, index=False)
-    print(f"  ✅ Saved {len(df_route)} rows → {path_route}")
+    print(f" Saved {len(df_route)} rows → {path_route}")
 
     # 3. Inactivity Dataset
     print("[3/3] Generating Inactivity dataset …")
     df_inac = data_generator.generate_inactivity_dataset(n_samples=3000)
     path_inac = os.path.join(DATA_DIR, "inactivity_data.csv")
     df_inac.to_csv(path_inac, index=False)
-    print(f"  ✅ Saved {len(df_inac)} rows → {path_inac}")
+    print(f"   Saved {len(df_inac)} rows → {path_inac}")
 
-    print("\n🎉 All CSV files generated successfully in backend/data/")
+    print("\n All CSV files generated successfully in backend/data/")
 
 
 if __name__ == "__main__":
