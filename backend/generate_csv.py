@@ -51,9 +51,9 @@ def main():
     df_inac = data_generator.generate_inactivity_dataset(n_samples=3000)
     path_inac = os.path.join(DATA_DIR, "inactivity_data.csv")
     df_inac.to_csv(path_inac, index=False)
-    print(f"   Saved {len(df_inac)} rows → {path_inac}")
+    print(f"Saved {len(df_inac)} rows → {path_inac}")
 
-    print("\n All CSV files generated successfully in backend/data/")
+    print("\nCSV files are generated successfully in backend/data/")
 
 
 if __name__ == "__main__":
