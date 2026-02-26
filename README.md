@@ -2,6 +2,9 @@
 
 A full-stack AI-powered web application that monitors tourists in real-time using 4 ML models.
 
+<img width="1893" height="925" alt="image" src="https://github.com/user-attachments/assets/a082615c-724a-48af-bf12-669476c466e0" />
+
+
 ## Project Structure
 
 ```
