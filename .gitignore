@@ -1,0 +1,49 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+backend/.env
+backend/app/ml_models/*.joblib
+backend/app/ml_models/*.pkl
+
+# Frontend / Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.eslintcache
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Gemini / Antigravity (Assistant data)
+.gemini/
+.agents/
+_agents/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
