@@ -89,3 +89,49 @@ def seed_zones(db: Session = Depends(get_db),
         db.add(Zone(**zd))
     db.commit()
     return {"status": "seeded", "count": len(zones_data)}
+
+
+@router.get("/tourists/{tourist_id}/risk-detail")
+def get_tourist_risk_detail(tourist_id: int,
+                            db: Session = Depends(get_db),
+                            _: User = Depends(get_police_user)):
+    """Full risk breakdown for a specific tourist."""
+    tourist = db.query(Tourist).filter(Tourist.id == tourist_id).first()
+    if not tourist:
+        raise HTTPException(status_code=404, detail="Tourist not found")
+
+    last_ping = db.query(LocationPing).filter(
+        LocationPing.tourist_id == tourist_id
+    ).order_by(LocationPing.timestamp.desc()).first()
+
+    active_alerts = db.query(Alert).filter(
+        Alert.tourist_id == tourist_id, Alert.is_resolved == False
+    ).order_by(Alert.created_at.desc()).limit(10).all()
+
+    zone = None
+    if last_ping and last_ping.zone_id:
+        zone = db.query(Zone).filter(Zone.id == last_ping.zone_id).first()
+
+    return {
+        "tourist_id": tourist.id,
+        "name": tourist.name,
+        "current_lat": last_ping.lat if last_ping else None,
+        "current_lng": last_ping.lng if last_ping else None,
+        "last_seen": tourist.last_seen.isoformat() if tourist.last_seen else None,
+        "panic_triggered": tourist.panic_triggered,
+        "area_risk_probability": zone.risk_probability if zone else 0.0,
+        "area_risk_label": ["Low", "Medium", "High"][zone.risk_label] if zone else "Low",
+        "is_deviation": last_ping.is_deviation if last_ping else False,
+        "deviation_distance_m": last_ping.deviation_distance_m if last_ping else 0.0,
+        "is_inactive": last_ping.is_inactive if last_ping else False,
+        "inactivity_minutes": last_ping.inactivity_minutes if last_ping else 0.0,
+        "crowd_risk": last_ping.crowd_risk if last_ping else 0.0,
+        "composite_risk_score": last_ping.composite_risk_score if last_ping else 0.0,
+        "active_alerts": [{
+            "id": a.id,
+            "alert_type": a.alert_type,
+            "severity": a.severity,
+            "message": a.message,
+            "created_at": a.created_at.isoformat(),
+        } for a in active_alerts],
+    }

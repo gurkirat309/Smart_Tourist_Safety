@@ -26,8 +26,16 @@ FEATURE_COLS = [
 ]
 
 
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "inactivity_data.csv")
+
+
 def train_inactivity_model(save: bool = True) -> Pipeline:
-    df = generate_inactivity_dataset(n_samples=3000)
+    if os.path.exists(CSV_PATH):
+        print(f"[InactivityModel] Loading training data from {CSV_PATH}")
+        df = pd.read_csv(CSV_PATH)
+    else:
+        print("[InactivityModel] CSV not found – generating synthetic data")
+        df = generate_inactivity_dataset(n_samples=3000)
 
     X = df[FEATURE_COLS]
     y = df["label"]

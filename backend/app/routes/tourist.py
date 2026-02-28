@@ -283,3 +283,87 @@ async def panic_alert(current_user: User = Depends(get_tourist_user),
         "created_at": alert.created_at.isoformat(),
     }))
     return {"status": "panic_sent", "alert_id": alert.id}
+
+
+@router.post("/predict-area")
+def predict_area(loc: LocationUpdate,
+                 current_user: User = Depends(get_tourist_user),
+                 db: Session = Depends(get_db)):
+    """
+    Predict risk for ANY location without starting a route.
+    Returns all 4 ML model outputs for the given lat/lng.
+    """
+    lat, lng = loc.lat, loc.lng
+    area_model, dev_model, inac_model = _get_models()
+
+    # ── 1. Area Risk ─────────────────────────────────────────────────────────
+    from app.models.models import Zone
+    zones = db.query(Zone).all()
+    closest_zone = None
+    min_dist = float("inf")
+    for z in zones:
+        from app.ml_models.route_deviation import haversine_meters
+        d = haversine_meters(lat, lng, z.center_lat, z.center_lng)
+        if d < min_dist:
+            min_dist = d
+            closest_zone = z
+
+    zone_features = {}
+    zone_risk_label = 0
+    if closest_zone:
+        zone_features = {
+            "lighting_score":   closest_zone.lighting_score,
+            "crowd_history":    closest_zone.crowd_history,
+            "incident_history": closest_zone.incident_history,
+            "isolation_score":  closest_zone.isolation_score,
+            "time_of_day_risk": closest_zone.time_of_day_risk,
+            "police_coverage":  closest_zone.police_coverage,
+        }
+    area_result = area_model.predict(zone_features)
+    zone_risk_label = area_result["risk_label"]
+
+    # ── 2. Route Deviation (no active route → 0 deviation) ───────────────────
+    dev_result = {"deviation_distance_m": 0.0, "is_deviation": False, "speed_kmh": 0.0, "heading_change_deg": 0.0}
+
+    # ── 3. Inactivity (snapshot) ─────────────────────────────────────────────
+    from datetime import datetime
+    now = datetime.utcnow()
+    time_of_day = (now.hour * 60 + now.minute) / (24 * 60)
+    inac_result = inac_model.analyze(
+        inactivity_minutes=0.0,
+        zone_risk_label=zone_risk_label,
+        time_of_day=time_of_day,
+        expected_stop=0,
+    )
+
+    # ── 4. Crowd Density ─────────────────────────────────────────────────────
+    from app.ml_models.crowd_density import run_dbscan
+    all_pings = db.query(LocationPing).order_by(LocationPing.timestamp.desc()).limit(200).all()
+    live_pings = [{"lat": p.lat, "lng": p.lng, "tourist_id": p.tourist_id} for p in all_pings]
+    live_pings.append({"lat": lat, "lng": lng, "tourist_id": 0})
+    crowd_df = run_dbscan(live_pings)
+
+    crowd_risk = 0.0
+    if not crowd_df.empty:
+        my_rows = crowd_df[crowd_df["tourist_id"] == 0]
+        if not my_rows.empty:
+            crowd_risk = float(my_rows["crowd_risk"].max())
+
+    # ── Composite ────────────────────────────────────────────────────────────
+    composite = (
+        area_result["risk_probability"] * 0.35
+        + (1.0 if dev_result["is_deviation"] else 0.0) * 0.25
+        + inac_result["inactivity_probability"] * 0.20
+        + crowd_risk * 0.20
+    )
+
+    return {
+        "lat": lat,
+        "lng": lng,
+        "area_risk": area_result,
+        "route_deviation": dev_result,
+        "inactivity": inac_result,
+        "crowd_risk": round(crowd_risk, 4),
+        "composite_risk_score": round(composite, 4),
+        "zone_name": closest_zone.name if closest_zone else "Unknown",
+    }

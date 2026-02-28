@@ -31,8 +31,16 @@ FEATURE_COLS = [
 LABEL_NAMES = {0: "Low", 1: "Medium", 2: "High"}
 
 
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "area_risk_data.csv")
+
+
 def train_area_risk_model(save: bool = True) -> Pipeline:
-    df = generate_area_risk_dataset(n_samples=3000)
+    if os.path.exists(CSV_PATH):
+        print(f"[AreaRiskModel] Loading training data from {CSV_PATH}")
+        df = pd.read_csv(CSV_PATH)
+    else:
+        print("[AreaRiskModel] CSV not found – generating synthetic data")
+        df = generate_area_risk_dataset(n_samples=3000)
 
     X = df[FEATURE_COLS]
     y = df["risk_label"]

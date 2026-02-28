@@ -47,8 +47,16 @@ def compute_heading(lat1, lng1, lat2, lng2) -> float:
     return abs(math.degrees(math.atan2(dlng, dlat)))
 
 
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "route_deviation_data.csv")
+
+
 def train_deviation_model(save: bool = True) -> Pipeline:
-    df = generate_route_deviation_dataset()
+    if os.path.exists(CSV_PATH):
+        print(f"[RouteDeviationModel] Loading training data from {CSV_PATH}")
+        df = pd.read_csv(CSV_PATH)
+    else:
+        print("[RouteDeviationModel] CSV not found – generating synthetic data")
+        df = generate_route_deviation_dataset()
 
     # Train IsolationForest on features only (unsupervised)
     X = df[FEATURE_COLS]
