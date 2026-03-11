@@ -1,3 +1,4 @@
+# SafeTravel AI
 # Smart Tourist Safety Monitoring & Incident Response System
 
 A full-stack AI-powered web application that monitors tourists in real-time using 4 ML models.
