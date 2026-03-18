@@ -15,9 +15,9 @@ async def lifespan(app: FastAPI):
     # Startup: create DB tables
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("✅ Database tables created/verified successfully")
+        logger.info("Database tables created/verified successfully")
     except Exception as e:
-        logger.error(f"⚠️  Database connection failed on startup: {e}")
+        logger.error(f" Database connection failed on startup: {e}")
         logger.error("Auth/DB endpoints will return 500 until DB is reachable.")
     yield
     # Shutdown: nothing to clean up
