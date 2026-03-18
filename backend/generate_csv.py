@@ -53,7 +53,7 @@ def main():
     df_inac.to_csv(path_inac, index=False)
     print(f"Saved {len(df_inac)} rows → {path_inac}")
 
-    print("\n CSV files are generated successfully in backend/data/")
+    print("\n CSV files are generated successfully in the backend/data/")
 
 
 if __name__ == "__main__":
