@@ -14,7 +14,7 @@ if "postgresql" in db_url or "postgres" in db_url:
     try:
         import psycopg2  # noqa: F401
     except ImportError:
-        print("⚠️  psycopg2 not installed – falling back to local SQLite database")
+        print("psycopg2 not installed – falling back to local SQLite database")
         _use_sqlite = True
 
 if _use_sqlite or db_url.startswith("sqlite"):
